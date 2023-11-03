@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>caNanoWiki AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #001f3f;  /* Dark blue */
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            display: block;
+            margin: 0 auto;
+            margin-bottom: 40px;
+            width: 200px;
+        }
+
+        form {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        label {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            font-size: 18px;
+            padding: 10px;
+            width: 500px;
+            border-radius: 10px;
+        }
+
+        button {
+            font-size: 18px;
+            padding: 10px 20px;
+            background-color: #00bfff;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0088cc;
+        }
+
+        .result {
+            background-color: #fff;
+            color: #000;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin: 0 auto;
+            max-width: 800px;
+            overflow-y: auto;  /* Enable vertical scrollbar */
+            max-height: 480px;  /* Set maximum height for the result window */
+        }
+
+        .export-button {
+            font-size: 18px;
+            padding: 10px 20px;
+            background-color: #008000;  /* Green */
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .export-button:hover {
+            background-color: #006400;  /* Dark green */
+        }   
+
+        .loading {
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logout-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #fff;
+            background-color: #333;
+            padding: 10px;
+            text-decoration: none;
+        }
+
+        .another-box.folded {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #999;
+            color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            /* Additional styling for the folded state */
+        }
+
+        .another-box {
+            background-color: #fff;
+            color: #000;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+            /* Additional styling for the unfolded state */
+        }
+
+        .dataframe {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .dataframe th,
+        .dataframe td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .dataframe th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .form-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-buttons button {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to caNanoLibrarian!</h1>
+
+    <img src="{{ url_for('static', filename='caNanoLablogo.jpg') }}" alt="caNanoWiki AI Logo" class="logo">
+
+
+    {% if authenticated %}
+        <a class="logout-button" href="{{ url_for('logout') }}">Logout</a>
+    {% endif %}
+
+    <form method="POST" action="/">
+        <label for="user_input">How can I help?</label>
+        <input type="text" id="user_input" name="user_input" value="{{ user_input }}" autofocus>
+        <br>
+        <button type="submit">Search</button>
+        <button onclick="openPopup()">Database Structure</button>
+    </form>
+
+    {% if processing %}
+        <p class="loading">Working on it...</p>
+    {% endif %}
+
+    {% if processed_input %}
+        <div class="result">
+            <p>{{ processed_input | safe }}</p>
+        </div>
+        <button class="export-button" onclick="exportToCSV()">Export as CSV</button>
+        <div class="Source-Info" onclick="toggleFoldedState(this)">
+            <h2>SQL Query String</h2>
+            <p>{{ source_sections | nl2br | safe }}</p>
+        </div>
+    {% else %}
+        <div class="result" style="display: none;"></div>
+    {% endif %}
+
+<script>
+    function toggleFoldedState(element) {
+        element.classList.toggle('folded');
+    }
+
+    function exportToCSV() {
+    // Get the HTML table element containing the DataFrame
+    var table = document.querySelector('.result table');
+
+    // Create an empty string to store the CSV content
+    var csvContent = "";
+
+    // Iterate through each row in the table
+    for (var i = 0; i < table.rows.length; i++) {
+        var row = table.rows[i];
+
+        // Iterate through each cell in the row
+        for (var j = 0; j < row.cells.length; j++) {
+            var cell = row.cells[j];
+
+            // Extract the cell value and add it to the CSV content
+            var cellValue = cell.innerText.trim();
+            csvContent += '"' + cellValue + '",';
+        }
+
+        // Add a line break after each row
+        csvContent += '\n';
+    }
+
+    // Create a temporary link element
+    var link = document.createElement('a');
+    link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent));
+    link.setAttribute('download', 'result.csv');
+    link.style.display = 'none';
+
+    // Add the link to the document and simulate a click event to trigger the download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    }
+
+    function openPopup() {
+            var popupWindow = window.open("", "Popup Window", "width=400,height=500");
+            var content = `
+                <html>
+                <head>
+                    <title>Pop-up Window</title>
+                </head>
+                <body>
+                    <h2>Database Structure</h2>
+                    <p>{table:NanoEntDes,attributes:[ID(Primary),NanoEntity,Description]}</p>
+                    <p>{table:NanoEntCom,attributes:[ID(Primary),NanoEntity,Composition,CompositionType,MolecularWeight,PubChemID]}</p>
+                    <p>{table:FuncEntDes,attributes:[ID(Primary),FunctionEntity,FunctionEntityType,Description,ActivationMethod,pubChemID,MolarMass,MolarMassUnit]}</p>
+                    <p>{table:FuncEntFunction,attributes:[ID(Primary),FunctionEntiry,Function,FunctionDescription]}</p>
+                    <p>{table:ChemAsso,attributes:[ID(Primary),AssociationType,BondType,Description,dataId,ComposingElementNameA,<br>
+                    ComposingElementNameB,CompositiontypeB,CompositiontypeA,DomainElementNameB,DomainElementNameA,DomainAssociationId,<br>
+                    ComposingElemetIdB,ComposingElemetIdA,ComposingElementTypeA,EntityDisplayNameB,ComposingElementTypeB,EntityDisplayNameA,AttachmentId]}</p>
+                    <p>{table:GeneralInfo,attributes:[ID(Primary),sampleName,createdYear,createdMonth]}</p>
+                    <p>{table:SampleKeyWords,attributes:[ID(Primary),sampleName,SampleKeyWord]}</p>
+                    <p>{table:PublicationInfo,attributes:[ID(Primary),PMID,year,title,author,journal,publicationCategories,description]}</p>
+                    <p>{table:PublicationKeyWords,attributes:[ID(Primary),sampleName,SampleKeyWord]}</p>
+                    <p>{table:CharacterizationInfo,attributes:[ID(Primary),CharType,CharName,AssayType,Protocol,DesignDescription,AnalysisAndConclusion]}</p>
+                    <p>{table:CharExpConfig,attributes:[ID(Primary),CharType,CharName,AssayType,ExpConfigTechnique,ExpConfigInstruments,ExpConfigDescription]}</p>
+                    <p>{table:CharResultDescriptions,attributes:[ID(Primary),CharType,CharName,AssayType,CharResultDescription]}</p>
+                    <p>{table:CharResultKeywords,attributes:[ID(Primary),CharType,CharName,AssayType,CharResultKeyword]}</p>
+                    <p>{table:CharResultTables,attributes:[ID(Primary),CharType,CharName,AssayType,CharTable]}</p>
+                </body>
+                </html>
+            `;
+
+            var popupWindow = window.open("", "Popup Window", "width=600,height=400");
+            popupWindow.document.write(content);
+            popupWindow.document.close();
+        }
+</script>
+</body>
+</html>
+
