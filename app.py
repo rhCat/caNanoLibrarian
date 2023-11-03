@@ -4,8 +4,6 @@ import time
 import openai
 import configparser
 import sqlite3
-from flask import Flask, render_template, request, redirect, url_for, g
-import application_utils as au
 
 dir_path = os.path.abspath(os.getcwd())
 
@@ -13,6 +11,9 @@ utils_path = dir_path + "/src/app_utils"
 src_path = dir_path + "/src"
 sys.path.append(utils_path)
 sys.path.append(src_path)
+
+from flask import Flask, render_template, request, redirect, url_for, g
+import application_utils as au
 
 COMPLETIONS_MODEL = "gpt-3.5-turbo"
 EMBEDDING_MODEL = "text-embedding-ada-002"
