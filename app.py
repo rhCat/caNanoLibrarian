@@ -36,7 +36,7 @@ COMPLETIONS_API_PARAMS = {
 app = Flask("caNanoLibrarian")
 
 # Set the passcode for authentication
-PASSCODE_auth = "caNanoLibrarian_DEMO_wkrh_6152023*"
+PASSCODE_auth = ""
 
 # Define a variable to track if the user is authenticated
 authenticated = False
